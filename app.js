@@ -21,3 +21,5 @@ app.all('/', (req, res) => res.send('Hello world'));
 app.listen(8000, '0.0.0.0', () => {
     console.log(`Webserver running on port 7000.`);
 });
+
+console.log(process.env.NEWS);
