@@ -6,6 +6,9 @@ const express = require('express');
 const bodyParser = require("body-parser");
 const NewsAPI = require('newsapi');
 const newsapi = new NewsAPI(process.env.NEWS);
+const weather = require('openweather-apis');
+weather.setLang('en');
+weather.setAPPID(process.env.WEATHER);
 const querystring = require('querystring');
 const app = express();
 app.disable('x-powered-by');
@@ -33,3 +36,22 @@ app.get('/news', (req, res) => {
         res.json({success:true, data: response});
       });
 });
+
+
+app.get('/weather', (req, res) => {
+    if(!req.query.city) res.status(400).json({success:false, reason:"No city provided."});
+    weather.setCity(req.query.city);
+
+    weather.getAllWeather((err, data) => {
+        if(err) {
+            console.log(err);
+            res.status(500).json({success:false, reason: "Something went wrong"});
+        } else {
+            res.json({success:true, data:data});
+        }
+    });
+
+
+
+});
+
