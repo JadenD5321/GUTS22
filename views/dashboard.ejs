@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard</title>
+    <link id="theme" href="https://control.alerts.dukedan.uk/css/<%=theme%>.css" rel="stylesheet" id="theme">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.1/dist/js/bootstrap.bundle.min.js" integrity="sha384-gtEjrD/SeCtmISkJkNUaaKMoLD0//ElJ19smozuHV6z3Iehds+3Ulb9Bn9Plx0x4" crossorigin="anonymous"></script>
+    <script src="https://kit.fontawesome.com/131ba6be4a.js" crossorigin="anonymous"></script>
+    <script>
+        function theme(btn) {
+            if(btn.innerHTML == "Lights off") {
+                document.cookie = "theme=dark; expires=Thu, 18 Dec 2050 12:00:00 UTC";
+                document.querySelector("#theme").href = "https://control.alerts.dukedan.uk/css/dark.css";
+                btn.innerHTML = "Lights on";
+            } else {
+                document.cookie =  "theme=standard; expires=Thu, 18 Dec 2050 12:00:00 UTC";
+                document.querySelector("#theme").href = "https://control.alerts.dukedan.uk/css/standard.css";
+                btn.innerHTML = "Lights off";
+            }
+        }
+        function logout() {
+            document.cookie = "token=; expires=Thu, 18 Dec 2010 12:00:00 UTC"
+            window.location.href = '/';
+        }
+    </script>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container-fluid container">
+            <a class="navbar-brand" href="#" pa-marked="1">GUTS22</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarColor01" aria-controls="navbarColor01" aria-expanded="false" aria-label="Toggle navigation" pa-marked="1">
+            <span class="navbar-toggler-icon"></span>
+            </button>
+    
+            <div class="collapse navbar-collapse" id="navbarColor01">
+
+            <ul class="navbar-nav me-auto">
+
+                <li class="nav-item" id="nav-settings">
+                    <a class="nav-link" href="#" pa-marked="1" onclick="logout()">Log out</a>
+                </li>
+    
+                
+            </ul>
+            <button class="btn btn-secondary my-2 my-sm-0" type="button" onclick="theme(this)" pa-marked="1" id="themebtn">Lights off </button>
+            </div>
+        </div>
+        </nav>
+    <div class="container">
+        <h1 clas="mt-3"> Dashboard</h1>
+        <p> Welcome to your dashboard, <%= userdata['forename'] %>.</p>
+    </div>
+</body>
+</html>
