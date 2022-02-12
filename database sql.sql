@@ -1,6 +1,6 @@
 create table manager (
     managerID integer not null auto_increment,
-    email varchar(200) not null,
+    email varchar(200) not null unique,
     forename varchar(50) not null,
     verificationCode varchar(50) default NULL,
     password varchar(64) not null,
@@ -17,5 +17,6 @@ create table staff (
     verificationCode varchar(50) default NULL,
     manager integer,
     foreign key (manager) references manager(managerID),
+    unique(managerID, email),
     primary key (staffID)
 )
