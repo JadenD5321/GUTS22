@@ -7,8 +7,6 @@ import requests
 
 url = 'http://api.openweathermap.org/geo/1.0/direct?q=%7Bcity name},{state code},{countrycode}&limit={limit}&appid={31b68aa2df700b29c325496f14e75f06}"
 
-urlib_file="needs a value"
-
 
 
 def weather(country, location):
@@ -36,6 +34,7 @@ def addcolleague(name, city):
     pass
 
 # ----Create an application Window
+application = Tk()
 application.title('Weather Condition in Colleagues Location')
 application.geometry('700x350')
 

@@ -3,6 +3,7 @@
     "dotenv": "^16.0.0",
     "email-validator": "^2.0.4",
     "express": "^4.17.2",
+    "generate-password": "^1.7.0",
     "mysql": "^2.18.1",
     "newsapi": "^2.4.1",
     "openweather-apis": "^4.4.2",
