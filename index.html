@@ -75,7 +75,7 @@
                     required.forEach(e => document.getElementById('register-'+e).disabled = true);
                     var submitbtn = document.getElementById('register-submit');
                     submitbtn.disabled = true;
-                    submitbtn.classList.replace('btn-primary', 'btn-info');
+                    submitbtn.classList.replace('btn-success', 'btn-info');
                     submitbtn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i>';
                     
                     //send request
@@ -94,7 +94,7 @@
                             if(data.field) document.getElementById('register-'+data.field).classList.add('is-invalid');
                             required.forEach(e => document.getElementById('register-'+e).disabled = false);
                             submitbtn.disabled = false;
-                            submitbtn.classList.replace('btn-info', 'btn-primary');
+                            submitbtn.classList.replace('btn-info', 'btn-success');
                             submitbtn.innerHTML = 'Register';
                             document.getElementById('register-error').innerHTML = `
                             <div class="alert alert-danger alert-dismissible fade show" role="alert">
@@ -133,7 +133,7 @@
                     required.forEach(e => document.getElementById('login-'+e).disabled = true);
                     var submitbtn = document.getElementById('login-submit');
                     submitbtn.disabled = true;
-                    submitbtn.classList.replace('btn-primary', 'btn-info');
+                    submitbtn.classList.replace('btn-success', 'btn-info');
                     submitbtn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i>';
                     
                     //send request
@@ -152,8 +152,8 @@
                             if(data.field) document.getElementById('login-'+data.field).classList.add('is-invalid');
                             required.forEach(e => document.getElementById('login-'+e).disabled = false);
                             submitbtn.disabled = false;
-                            submitbtn.classList.replace('btn-info', 'btn-primary');
-                            submitbtn.innerHTML = 'Register';
+                            submitbtn.classList.replace('btn-info', 'btn-success');
+                            submitbtn.innerHTML = 'Log in';
                             document.getElementById('login-error').innerHTML = `
                             <div class="alert alert-danger alert-dismissible fade show" role="alert">
                             <strong>${data.reason}</strong> 
