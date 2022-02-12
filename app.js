@@ -27,7 +27,7 @@ app.use(cookieParser());
 app.use(bodyParser.urlencoded({ verify: rawBodySaver, extended: true, limit:'50mb' }));
 app.use(bodyParser.raw({ verify: rawBodySaver, type: '*/*', limit:'50mb' }));
 app.engine('html', require('ejs').renderFile);
-app.set('view engine', 'html');
+app.set('view engine', 'ejs');
 
 app.listen(8000, '0.0.0.0', () => {
     console.log(`Webserver running on port 8000.`);
@@ -166,24 +166,24 @@ app.get('/', (req, res) => {
 app.get('/dashboard', (req, res) => {
     if(!req.cookies.token) return res.redirect('/');
     if(!req.cookies.theme) req.cookies.theme = 'standard';
-    res.render('error', {theme: req.cookies.theme, msg: "Test"});
+    
     var con = db_connection();
     con.connect(function(err) {
         if(err) {
             console.log(err);
-            return res.json({success:false, reason: "Database error. Please retry."});
+            return res.render('error.ejs', {theme: req.cookies.theme, msg: "Database error. Please try again later."});
         } else {
             con.query(`SELECT * FROM manager WHERE token = ${mysql.escape(req.cookies.token)};`, (err, result) => {
                 if(err) {
                     console.log(err);
                     con.end().catch(() => console.log(""));
-                    return res.json({success:false, reason: "Database error. Please retry." });
+                    return res.render('error.ejs', {theme: req.cookies.theme, msg: "Database error. Please try again later."});
                 } else {
                     con.end();
                     if(result.length == 1) {
                         res.json({success:true, token:result[0].token});
                     } else {
-                        res.status(403).send("<h1> Your token is invalid. Please try logging in again. </h1>");
+                        res.render('error.ejs', {theme: req.cookies.theme, msg: "Your token is invalid. Please try logging in again."});
                     }
                 }
             });
