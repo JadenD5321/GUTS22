@@ -196,6 +196,11 @@
             border-top-right-radius: 0;
             border-top-left-radius: 0;
         }
+        body {overflow-y: hidden;}
+        .modal-backdrop {opacity: 0.75 !important;}
+        @media screen and (max-width: 450px) {
+            #background-img-wrap {padding:5rem !important;}
+        }
     </style>
 </head>
 <body>
@@ -207,38 +212,37 @@
             </button>
     
             <div class="collapse navbar-collapse" id="navbarColor01">
-            <ul class="navbar-nav me-auto"></ul>
-            <!--
             <ul class="navbar-nav me-auto">
                 <li class="nav-item">
-                <a class="nav-link active" href="#" pa-marked="1">Home
-                    <span class="visually-hidden">(current)</span>
-                </a>
+                <a href="#" data-bs-toggle="modal" data-bs-target="#loginModal" class="nav-link">Log in</a>
                 </li>
-                <li class="nav-item" style="display:none" id="nav-settings">
-                    <a class="nav-link" href="/settings" pa-marked="1">Bot settings</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="https://pay.dukedan.uk" id="logout-buy" pa-marked="1">Purchase a bot</a>
-                </li>
-                
-                <li class="nav-item">
-                <a class="nav-link" href="guide" pa-marked="1">Guide</a>
-                </li>
-    
-                
             </ul>
-            -->
             <button class="btn btn-secondary my-2 my-sm-0" type="button" onclick="theme(this)" pa-marked="1" id="themebtn">Lights off </button>
             </div>
         </div>
         </nav>
 
-    <div class="container">
-        <h1 class="mt-3">Welcome to the GUTS22 app.</h1>
-        <p><a href="#" data-bs-toggle="modal" data-bs-target="#registerModal"><button class="btn btn-primary">Register</button></a></p>
-        <p>or <a href="#" data-bs-toggle="modal" data-bs-target="#loginModal">log in</a>.</p>
-    </div>
+          <!-- Background image -->
+            <div
+            class="text-center bg-image vh-100"
+            id="background-img-wrap"
+            style="
+                padding: 15rem;
+                background-image: url('https://wallpapertag.com/wallpaper/full/d/a/b/53590-top-office-background-2000x1095.jpg');
+                background-repeat: no-repeat;
+                background-attachment: fixed;
+                background-position: center; 
+            "
+            >
+            <div class="mask">
+                <div class="h-100 w-100">
+                    <div class="text-dark align-middle">
+                        <h1 class="mb-3">Manage your staff with ease</h1>
+                            <button type="button" class="btn btn-lg btn-primary" data-bs-toggle="modal" data-bs-target="#registerModal">Get started today</button>
+                    </div>
+                </div>
+            </div>
+            </div>
 
     <!-- register modal -->
     <div class="modal fade" id="registerModal" tabindex="-1" aria-labelledby="registerModalLabel" data-bs-backdrop="static" aria-modal="true" role="dialog">
