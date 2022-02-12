@@ -87,8 +87,8 @@
                                 },
                                 body: JSON.stringify(data)
                                 }).then(response => response.json())
-                            .then(data => {
-                                if(data.success) {
+                            .then(res => {
+                                if(res.success) {
                                     var submitbtn = document.getElementById('add-submit');
                                     required.forEach(e => {
                                         document.getElementById('add-'+e).disabled = false;
@@ -104,6 +104,10 @@
                                     </div>
                                     `;
                                     // add card
+                                    add_staff_card(data.email, data.name, data.city, data.country);
+                                    document.getElementById('remove-email').innerHTML += `
+                                    <option value='${data.email}' id='${data.email}'> ${data.name} (${data.email})</option>
+                                    `;
                                 } else {
                                     var submitbtn = document.getElementById('add-submit');
                                     if(data.field) document.getElementById('add-'+data.field).classList.add('is-invalid');
@@ -168,6 +172,8 @@
                             </div>
                             `;
                             // remove card
+                            remove_staff_card(data.email);
+                            
                         } else {
                             var submitbtn = document.getElementById('remove-submit');
                             if(data.field) document.getElementById('remove-'+res.field).classList.add('is-invalid');
@@ -187,6 +193,64 @@
             });
         
         };
+
+        function add_staff_card(email, name, city, country) {
+            fetch(`/api/news?country=${country}`).then(response => response.json())
+            .then(news => {
+                if(news.success) {
+                    fetch(`/api/weather?city=${city}`).then(response => response.json())
+                    .then(weather => {
+                        if(news.success) {
+                            var max = 5;
+                            if(news.data.status != "ok") return document.getElementById('main').innerHTML += 'error fetching news';
+                            if(news.data.totalResults < 5) max = news.data.totalResults;
+
+                            var news_str = "";
+                            var a;
+                            for(var x=0; x<max; x++) {
+                                a = news.data.articles[x];
+                                news_str += `<li class="list-group-item">
+                                    ${a.title}<br>
+                                    <a href='${a.url}' target='_blank'>Read article <i class="fa-solid fa-arrow-up-right-from-square"></i></a>
+                                </li>`
+                            }
+                            document.getElementById('main').innerHTML += `
+                            <div class='col mt-3 pe-3 ps-3' id='card-${email}'>
+                                <div class="card" style="width: 100%;">
+                                <div class="card-header">
+                                    <b>${name}</b>
+                                </div>
+                                <div class='card-body'>
+                                <h5 class='card-title'><b>${city}, ${country} </b></h5>
+                                <span>${weather.data.weather[0].description[0].toUpperCase()+weather.data.weather[0].description.slice(1)}</span><br>
+                                <span> <b>${weather.data.main.temp} &deg; C</b>, feels like ${weather.data.main.feels_like} &deg; C </span><br>
+                                <span class='text-muted'> <b>max: </b>${weather.data.main.temp_max} &deg; C</span><br>
+                                <span class='text-muted'> <b>min:</b> ${weather.data.main.temp_min} &deg; C</span>
+                                </div>
+                                <ul class="list-group list-group-flush">
+                                    ${news_str}
+                                </ul>
+                                </div>
+                            </div>
+                            `;
+                        } else {
+                            document.getElementById('main').innerHTML += `<p class='text-danger'> error fetching weather for ${email}</p>`;
+                        }
+                    });
+                } else {
+                    document.getElementById('main').innerHTML += `<p class='text-danger'> error fetching news for ${email}</p>`;
+                }
+            });
+            
+        }
+
+        function remove_staff_card(email) {
+            document.getElementById('card-'+email).remove();
+        }
+
+        <%staff.forEach(s => { %>
+            add_staff_card('<%=s.email%>', '<%=s.name%>', '<%=s.city%>', '<%=s.country%>');
+       <% }); %>
     </script>
     <style>
         #add-email {
@@ -199,6 +263,18 @@
         #add-country {
             border-top-left-radius: 0;
             border-top-right-radius: 0;
+        }
+        @media screen and (max-width: 450px) {
+            #dashboard-heading {
+                display:block;
+                clear:both;
+            }
+            #btnaddstaff, #btnremovestaff {
+                width:48.5%;
+                margin-bottom:20px;
+            }
+
+
         }
     </style>
 </head>
@@ -226,10 +302,20 @@
         </nav>
     <div class="mt-3"></div>
     <div class="container">
-        <button class="btn btn-success float-end ms-1" data-bs-toggle="modal" data-bs-target="#addModal">Add staff</button>
-        <button class="btn btn-danger float-end me-1" data-bs-toggle="modal" data-bs-target="#removeModal">Remove staff</button>
-        <h1 clas="mt-3"> Dashboard</h1>
-        <p> Welcome to your dashboard, <%= userdata['forename'] %>.</p>
+        <button class="btn btn-danger float-end ms-1" data-bs-toggle="modal" data-bs-target="#removeModal" id="btnremovestaff">Remove staff</button>
+        <button class="btn btn-success float-end me-1" data-bs-toggle="modal" data-bs-target="#addModal" id="btnaddstaff">Add staff</button>
+        
+        <h1 clas="mt-3" id="dashboard-heading"> Dashboard</h1>
+        
+
+        <p> Welcome to your dashboard, <%= userdata['forename'] %>. The staff members that you've added are displayed below.</p>
+        <p> Please click the 'Add staff' and 'Remove staff' buttons to add and remove staff from your dashboard.</p>
+        <!-- JavaScript will modify the below div:-->
+        <div class="mt-3 row" id="main">
+
+        </div>
+        <!-- spacer -->
+        <div class="mb-5"></div>
     </div>
 
 
