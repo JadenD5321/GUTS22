@@ -39,6 +39,8 @@ app.get('/api/news', (req, res) => {
 });
 
 
+
+
 app.get('/api/weather', (req, res) => {
     if(!req.query.city) res.status(400).json({success:false, reason:"No city provided."});
     weather.setCity(req.query.city);
@@ -126,6 +128,37 @@ app.post('/api/register', (req, res) => {
 
 });
 
+app.post("/api/login", (req, res) => {
+    var email = req.body.email;
+    var password = req.body.password;
+
+    if(!email || !password) return res.json({success:false, reason: "Missing data"});
+
+    var con = db_connection();
+    con.connect(function(err) {
+        if(err) {
+            console.log(err);
+            return res.json({success:false, reason: "Database error. Please retry."});
+        } else {
+            con.query(`SELECT token FROM manager WHERE email = ${mysql.escape(email)} AND password = ${mysql.escape(sha256(password))};`, (err, result) => {
+                if(err) {
+                    console.log(err);
+                    con.end().catch(() => console.log(""));
+                    return res.json({success:false, reason: "Database error. Please retry." });
+                } else {
+                    con.end();
+                    if(result.length == 1) {
+                        res.json({success:true, token:r[0].token});
+                    } else {
+                        res.json({success:false, reason: "Your email or password is incorrect."});
+                    }
+                }
+            });
+        }
+    });
+
+                    
+});
 
 function db_connection() {
     return mysql.createConnection({
