@@ -215,7 +215,7 @@
                                 </li>`
                             }
                             document.getElementById('main').innerHTML += `
-                            <div class='col mt-3 pe-3 ps-3' id='card-${email}'>
+                            <div class='col mt-3 pe-3 ps-3 staffcard' id='card-${email}'>
                                 <div class="card" style="width: 100%;">
                                 <div class="card-header">
                                     <b>${name}</b>
@@ -277,6 +277,11 @@
 
         }
         .modal-backdrop {opacity: 0.75 !important;}
+        
+        @media screen and (max-width: 450px) {
+            .staffcard {width:100%;}
+        }
+
     </style>
 </head>
 <body>
