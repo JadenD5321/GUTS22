@@ -47,19 +47,59 @@ app.get('/api/news', (req, res) => {
 
 app.get('/api/weather', (req, res) => {
     if(!req.query.city) res.status(400).json({success:false, reason:"No city provided."});
-    weather.setCity(req.query.city);
+    try {
+        weather.setCity(req.query.city);
+        weather.getAllWeather((err, data) => {
+            if(err) {
+                console.log(err);
+                return res.json({success:false, reason: `${err}`});
+            } else {
+                return res.json({success:true, data:data});
+            }
+        });
+    } catch(err) {
+        return res.json({success:false, reason: `${err}`});
+    }
 
-    weather.getAllWeather((err, data) => {
-        if(err) {
-            console.log(err);
-            res.status(500).json({success:false, reason: `${err}`});
-        } else {
-            res.json({success:true, data:data});
-        }
-    });
+    
 
 });
 
+app.post('/api/add-staff', (req, res) => {
+    var email = req.body.email;
+    var name = req.body.name;
+    var city = req.body.name;
+    var country = req.body.country;
+    var manager_token = req.cookies.token;
+
+    if(!manager_token) return res.json({success:false, reason:"Unauthorised. Try logging out and logging back in."});
+    if(!email || !name || !city || !country) return res.json({success:false, reason: "Missing data"});
+    if(!email_validator.validate(email)) return res.json({success:false, reason: "The email address provided is invalid.", field:"email"});
+
+    var con = db_connection();
+    con.connect(function(err) {
+        if(err) {
+            console.log(err);
+            return res.json({success:false, reason: "Database error. Please retry."});
+        } else {
+            con.query(`INSERT INTO staff (email, name, city, country, manager) VALUES (${mysql.escape(email)}, ${mysql.escape(name)}, ${mysql.escape(city)}, ${mysql.escape(country)}, (SELECT managerID FROM manager WHERE token = ${mysql.escape(manager_token)}));;`, (err, result) => {
+                con.end();
+                if(err) {
+                    console.log(err);
+                    return res.json({success:false, reason:"Database error. Please retry."});
+                } else {
+                    if(result.affectedRows == 1) {
+                        res.json({success:true});
+                    } else {
+                        res.json({success:false, reason:"This action was unsuccessful. Please check that this email isn't already added."});
+                    }
+                }
+            });
+        }
+    });
+
+
+});
 
 app.post('/api/register', (req, res) => {
     var email = req.body.email;
