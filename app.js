@@ -33,6 +33,10 @@ app.listen(8000, '0.0.0.0', () => {
     console.log(`Webserver running on port 8000.`);
 });
 
+app.get('/background', (req, res) => {
+    res.sendFile('images/background.jpeg', {root: '.'});
+});
+
 app.get('/api/news', (req, res) => {
     if(!req.query.country) res.status(400).json({success:false, reason:"No country provided."});
     newsapi.v2.topHeadlines({
