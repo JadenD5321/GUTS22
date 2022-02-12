@@ -1,10 +1,12 @@
-/*jshint esversion: 8 */
+/*jshint esversion: 11 */
 require('dotenv').config();
 const request = require('request');
 const mysql = require('mysql');
 const express = require('express');
 const bodyParser = require("body-parser");
 const NewsAPI = require('newsapi');
+const email_validator = require("email-validator");
+const sha256 = require('sha256');
 const newsapi = new NewsAPI(process.env.NEWS);
 const weather = require('openweather-apis');
 weather.setLang('en');
@@ -26,7 +28,7 @@ app.listen(8000, '0.0.0.0', () => {
     console.log(`Webserver running on port 8000.`);
 });
 
-app.get('/news', (req, res) => {
+app.get('/api/news', (req, res) => {
     if(!req.query.country) res.status(400).json({success:false, reason:"No country provided."});
     newsapi.v2.topHeadlines({
         country: req.query.country
@@ -36,7 +38,7 @@ app.get('/news', (req, res) => {
 });
 
 
-app.get('/weather', (req, res) => {
+app.get('/api/weather', (req, res) => {
     if(!req.query.city) res.status(400).json({success:false, reason:"No city provided."});
     weather.setCity(req.query.city);
 
@@ -55,4 +57,60 @@ app.get('/', (req, res) => {
     res.sendFile('index.html', {root:'.'});
 });
 
+app.post('/api/register', (req, res) => {
+    var email = req.body.email;
+    var forename = req.body.forename;
+    var password = req.body.password;
 
+    if(!email || !forename || !password) return res.json({success:false, reason: "Missing data"});
+    if(!email_validator.validate(email)) return res.json({success:false, reason: "The email address provided is invalid."});
+
+    var con = db_connection();
+    con.connect(function(err) {
+        if(err) {
+            console.log(err);
+            return res.json({success:false, reason: "Database error. Please retry."});
+        } else {
+            con.query(`SELECT * FROM staff, manager WHERE staff.email = ${mysql.escape(email)} OR manager.email = ${mysql.escape(email)};`, (err, result) => {
+                if(err) {
+                    console.log(err);
+                    con.end().catch(() => console.log(""));
+                    return res.json({success:false, reason: "Database error. Please retry." });
+                } else {
+                    if(result.length >= 1) {
+                        con.end();
+                        return res.json({success:false, reason: "This email is already in use. Please retry with another one.", field: "email"});
+                    } else {
+                        con.query(`INSERT INTO manager (email, forename, password) VALUES (${mysql.escape(email)}, ${mysql.escape(forename)}, ${mysql.escape(sha256(password))});`, (err, result) => {
+                            if(err) {
+                                console.log(err);
+                                con.end().catch(() => console.log(""));
+                                return res.json({success:false, reason: "Database error. Please retry."});
+                            } else {
+                                con.end();
+                                if(result.affectedRows == 1) {
+                                    return res.json({success:true});
+                                } else {
+                                    return res.json({success:false, reason:"An error has occurred. Please retry."});
+                                }
+                            }
+                        });
+                    }   
+                }
+            });
+        }
+        
+        
+    });
+
+});
+
+
+function db_connection() {
+    return mysql.createConnection({
+        host: 'dukedan.uk',
+        user: process.env.DB,
+        password: process.env.DBPASS,
+        database: process.env.DB
+    });
+}
