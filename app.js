@@ -160,7 +160,39 @@ app.post("/api/login", (req, res) => {
 });
 
 app.get('/', (req, res) => {
-    res.sendFile('index.html', {root:'.'});
+    if(req.cookies) {
+        if (req.cookies.token) {
+            var con = db_connection();
+            con.connect(function(err) {
+                if(err) {
+                    console.log(err);
+                    res.sendFile('index.html', {root:'.'});
+                    //return res.render('error.ejs', {theme: req.cookies.theme, msg: "Database error. Please try again later."});
+                } else {
+                    con.query(`SELECT * FROM manager WHERE token = ${mysql.escape(req.cookies.token)};`, (err, result) => {
+                        if(err) {
+                            console.log(err);
+                            con.end().catch(() => console.log(""));
+                            res.sendFile('index.html', {root:'.'});
+                            //return res.render('error.ejs', {theme: req.cookies.theme, msg: "Database error. Please try again later."});
+                        } else {
+                            con.end();
+                            if(result.length == 1) {
+                                return res.redirect('/dashboard');
+                            } else {
+                                res.sendFile('index.html', {root:'.'});
+                            }
+                        }
+                    });
+                }
+            });
+        } else {
+            res.sendFile('index.html', {root:'.'});
+        }
+    } else {
+        res.sendFile('index.html', {root:'.'});
+    }
+    
 });
 
 app.get('/dashboard', (req, res) => {
@@ -181,7 +213,7 @@ app.get('/dashboard', (req, res) => {
                 } else {
                     con.end();
                     if(result.length == 1) {
-                        res.json({success:true, token:result[0].token});
+                        res.render('dashboard.ejs', {theme: req.cookies.theme, userdata: result[0]});
                     } else {
                         res.render('error.ejs', {theme: req.cookies.theme, msg: "Your token is invalid. Please try logging in again."});
                     }
