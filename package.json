@@ -1,11 +1,13 @@
 {
   "dependencies": {
     "dotenv": "^16.0.0",
+    "email-validator": "^2.0.4",
     "express": "^4.17.2",
     "mysql": "^2.18.1",
     "newsapi": "^2.4.1",
     "openweather-apis": "^4.4.2",
     "querystring": "^0.2.1",
-    "request": "^2.88.2"
+    "request": "^2.88.2",
+    "sha256": "^0.2.0"
   }
 }
