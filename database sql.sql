@@ -19,6 +19,6 @@ create table staff (
     /* token varchar(50) default NULL, */
     manager integer,
     foreign key (manager) references manager(managerID),
-    unique(managerID, email),
+    unique(manager, email),
     primary key (staffID)
 )
