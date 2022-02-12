@@ -91,7 +91,7 @@
                             document.cookie = `token=${data.token}; expires=Thu, 18 Dec 2050 12:00:00 UTC`;
                             window.location.href = '/dashboard';
                         } else {
-                            var submitbtn = document.getElementById('add-submit');
+                            var submitbtn = document.getElementById('register-submit');
                             if(data.field) document.getElementById('register-'+data.field).classList.add('is-invalid');
                             required.forEach(e => document.getElementById('register-'+e).disabled = false);
                             submitbtn.disabled = false;
@@ -150,7 +150,7 @@
                             document.cookie = `token=${data.token}; expires=Thu, 18 Dec 2050 12:00:00 UTC`;
                             window.location.href = '/dashboard';
                         } else {
-                            var submitbtn = document.getElementById('add-submit');
+                            var submitbtn = document.getElementById('login-submit');
                             if(data.field) document.getElementById('login-'+data.field).classList.add('is-invalid');
                             required.forEach(e => document.getElementById('login-'+e).disabled = false);
                             submitbtn.disabled = false;
