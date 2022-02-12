@@ -21,11 +21,125 @@
                 btn.innerHTML = "Lights off";
             }
         }
+        
         function logout() {
             document.cookie = "token=; expires=Thu, 18 Dec 2010 12:00:00 UTC"
             window.location.href = '/';
         }
+        function removeDanger(e) {
+            if(e.classList.contains('is-invalid')) {
+                e.classList.remove('is-invalid');
+            }
+        }
+        window.onload = function() {
+            if('<%=theme%>' == 'dark') document.getElementById('themebtn').innerHTML = "Lights on";
+
+            document.getElementById('add').addEventListener('submit', (e) => {
+                e.preventDefault();
+
+                var arr = $('#add').serializeArray();
+                var data = {};
+                for(var x=0;x<arr.length;x++) {
+                    data[arr[x].name] = arr[x].value;
+                }
+                var required = ['email', 'name', 'city', 'country'];
+                var p = true;
+                for(x=0;x<required.length;x++) {
+                    if(!data[required[x]])  {
+                        document.getElementById('add-'+required[x]).classList.add('is-invalid');
+                        p = false;
+                    }
+                    
+                }
+                if(!p) {
+                    document.getElementById('add-error').innerHTML = `<div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    <strong>Please fill in all of the fields.</strong> 
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>`;
+                } else {
+                    // disable form
+                    required.forEach(e => document.getElementById('add-'+e).disabled = true);
+                    var submitbtn = document.getElementById('add-submit');
+                    submitbtn.disabled = true;
+                    submitbtn.classList.replace('btn-success', 'btn-info');
+                    submitbtn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i>';
+
+                    fetch(`/api/weather?city=${data.city}`).then(response => response.json())
+                    .then(weathertest => {
+                        if(!weathertest.success) {
+                            required.forEach(e => document.getElementById('add-'+e).disabled = false);
+                            var submitbtn = document.getElementById('add-submit');
+                            submitbtn.disabled = false;
+                            submitbtn.classList.replace('btn-info', 'btn-success');
+                            submitbtn.innerHTML = 'Add staff member';
+                            document.getElementById('add-error').innerHTML = `<div class="alert alert-danger alert-dismissible fade show" role="alert">
+                            <strong>The provided city is invalid.</strong> 
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                            </div>`;
+                            document.getElementById('add-city').classList.add('is-invalid');
+                            
+                        } else {
+                            //send request
+                            fetch('/api/add-staff', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json'
+                                },
+                                body: JSON.stringify(data)
+                                }).then(response => response.json())
+                            .then(data => {
+                                if(data.success) {
+                                    var submitbtn = document.getElementById('add-submit');
+                                    required.forEach(e => {
+                                        document.getElementById('add-'+e).disabled = false;
+                                        if(e != 'country') document.getElementById('add-'+e).value = '';
+                                    });
+                                    submitbtn.disabled = false;
+                                    submitbtn.classList.replace('btn-info', 'btn-success');
+                                    submitbtn.innerHTML = 'Add staff member';
+                                    document.getElementById('add-error').innerHTML = `
+                                    <div class="alert alert-success alert-dismissible fade show" role="alert">
+                                    <strong>This staff member has been added.</strong> 
+                                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                                    </div>
+                                    `;
+                                    // add card
+                                } else {
+                                    var submitbtn = document.getElementById('add-submit');
+                                    if(data.field) document.getElementById('add-'+data.field).classList.add('is-invalid');
+                                    required.forEach(e => document.getElementById('add-'+e).disabled = false);
+                                    submitbtn.disabled = false;
+                                    submitbtn.classList.replace('btn-info', 'btn-primary');
+                                    submitbtn.innerHTML = 'Add staff member';
+                                    document.getElementById('add-error').innerHTML = `
+                                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                                    <strong>${data.reason}</strong> 
+                                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                                    </div>
+                                    `;
+                                }
+                            });
+                        }
+                    });
+                    
+
+                }
+            });
+        };
     </script>
+    <style>
+        #add-email {
+            border-bottom-left-radius: 0;
+            border-bottom-right-radius: 0;
+        }
+        #add-name, #add-city {
+            border-radius: 0;
+        }
+        #add-country {
+            border-top-left-radius: 0;
+            border-top-right-radius: 0;
+        }
+    </style>
 </head>
 <body>
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
@@ -49,9 +163,227 @@
             </div>
         </div>
         </nav>
+    <div class="mt-3"></div>
     <div class="container">
+        <button class="btn btn-success float-end ms-1" data-bs-toggle="modal" data-bs-target="#addModal">Add staff</button>
+        <button class="btn btn-danger float-end me-1">Remove staff</button>
         <h1 clas="mt-3"> Dashboard</h1>
         <p> Welcome to your dashboard, <%= userdata['forename'] %>.</p>
     </div>
+
+
+          <!-- add modal -->
+    <div class="modal fade" id="addModal" tabindex="-1" aria-labelledby="addModalLabel" data-bs-backdrop="static" aria-modal="true" role="dialog">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content">
+        <div class="modal-header">
+            <h5 class="modal-title" id="addModalLabel">Add staff member</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" pa-marked="1"></button>
+        </div>
+        <div class="modal-body">
+            <form id="add">
+            <p> Please enter the details of the staff member. </p>
+            <div class="form-floating">
+                <input type="email" class="form-control" name="email" id="add-email" placeholder="name@example.com" autocomplete="off" onkeyup="removeDanger(this)">
+                <label for="add-email">Email address</label>
+            </div>
+            <div class="form-floating">
+                <input type="text" class="form-control" name="name" id="add-name" placeholder="Name" onkeyup="removeDanger(this)" autocomplete="off">
+                <label for="add-name">Name</label>
+            </div>
+            <div class="form-floating">
+                <input type="text" class="form-control" name="city" id="add-city" placeholder="City" onkeyup="removeDanger(this)" autocomplete="off">
+                <label for="add-city">City</label>
+            </div>
+            <div class="form-floating">
+                <select name="country" autocomplete="off" id="add-country" class="form-select" onchange="removeDanger(this)">
+                    <option value="AL">Albania</option>
+                    <option value="DZ">Algeria</option>
+                    <option value="AD">Andorra</option>
+                    <option value="AO">Angola</option>
+                    <option value="AG">Antigua</option>
+                    <option value="AR">Argentina</option>
+                    <option value="AM">Armenia</option>
+                    <option value="AU">Australia</option>
+                    <option value="AT">Austria</option>
+                    <option value="AZ">Azerbaijan</option>
+                    <option value="BS">Bahamas</option>
+                    <option value="BH">Bahrain</option>
+                    <option value="BD">Bangladesh</option>
+                    <option value="BB">Barbados</option>
+                    <option value="BE">Belgium</option>
+                    <option value="BZ">Belize</option>
+                    <option value="BM">Bermuda</option>
+                    <option value="BO">Bolivia</option>
+                    <option value="BA">Bosnia-Herzegovina</option>
+                    <option value="BR">Brazil</option>
+                    <option value="BG">Bulgaria</option>
+                    <option value="CA">Canada</option>
+                    <option value="KY">Cayman Islands</option>
+                    <option value="CL">Chile</option>
+                    <option value="CN">China</option>
+                    <option value="CO">Colombia</option>
+                    <option value="CR">Costa Rica</option>
+                    <option value="HR">Croatia</option>
+                    <option value="CY">Cyprus</option>
+                    <option value="CZ">Czech Republic</option>
+                    <option value="DK">Denmark</option>
+                    <option value="DO">Dominican Republic</option>
+                    <option value="EC">Ecuador</option>
+                    <option value="EG">Egypt</option>
+                    <option value="SV">El Salvador</option>
+                    <option value="EE">Estonia</option>
+                    <option value="ET">Ethiopia</option>
+                    <option value="FI">Finland</option>
+                    <option value="FR">France</option>
+                    <option value="GE">Georgia</option>
+                    <option value="DE">Germany</option>
+                    <option value="GH">Ghana</option>
+                    <option value="GI">Gibraltar (UK)</option>
+                    <option value="GR">Greece</option>
+                    <option value="GD">Grenada</option>
+                    <option value="GT">Guatemala</option>
+                    <option value="GY">Guyana</option>
+                    <option value="HN">Honduras</option>
+                    <option value="HK">Hong Kong - SAR of China</option>
+                    <option value="HU">Hungary</option>
+                    <option value="IS">Iceland</option>
+                    <option value="IN">India</option>
+                    <option value="ID">Indonesia</option>
+                    <option value="IR">Iran</option>
+                    <option value="IE">Ireland</option>
+                    <option value="IL">Israel</option>
+                    <option value="IT">Italy</option>
+                    <option value="JM">Jamaica</option>
+                    <option value="JP">Japan</option>
+                    <option value="JO">Jordan</option>
+                    <option value="KZ">Kazakhstan</option>
+                    <option value="KE">Kenya</option>
+                    <option value="XK">Kosovo</option>
+                    <option value="KW">Kuwait</option>
+                    <option value="KG">Kyrgyzstan</option>
+                    <option value="LV">Latvia</option>
+                    <option value="LB">Lebanon</option>
+                    <option value="LR">Liberia</option>
+                    <option value="LY">Libya</option>
+                    <option value="LI">Liechtenstein</option>
+                    <option value="LT">Lithuania</option>
+                    <option value="LU">Luxembourg</option>
+                    <option value="MY">Malaysia</option>
+                    <option value="MV">Maldives</option>
+                    <option value="MT">Malta</option>
+                    <option value="MU">Mauritius</option>
+                    <option value="MX">Mexico</option>
+                    <option value="MC">Monaco</option>
+                    <option value="ME">Montenegro</option>
+                    <option value="MA">Morocco</option>
+                    <option value="MZ">Mozambique</option>
+                    <option value="NA">Namibia</option>
+                    <option value="AN">Netherland Antilles</option>
+                    <option value="NL">Netherlands</option>
+                    <option value="NZ">New Zealand</option>
+                    <option value="NI">Nicaragua</option>
+                    <option value="NG">Nigeria</option>
+                    <option value="NO">Norway</option>
+                    <option value="OM">Oman</option>
+                    <option value="PK">Pakistan</option>
+                    <option value="PA">Panama</option>
+                    <option value="PY">Paraguay</option>
+                    <option value="PE">Peru</option>
+                    <option value="PH">Philippines</option>
+                    <option value="PL">Poland</option>
+                    <option value="PT">Portugal</option>
+                    <option value="PR">Puerto Rico</option>
+                    <option value="QA">Qatar</option>
+                    <option value="RO">Romania</option>
+                    <option value="RU">Russia</option>
+                    <option value="SA">Saudi Arabia</option>
+                    <option value="RS">Serbia</option>
+                    <option value="SC">Seychelles</option>
+                    <option value="SL">Sierra Leone</option>
+                    <option value="SG">Singapore</option>
+                    <option value="SK">Slovakia</option>
+                    <option value="SI">Slovenia</option>
+                    <option value="ZA">South Africa</option>
+                    <option value="KR">South Korea</option>
+                    <option value="ES">Spain</option>
+                    <option value="LK">Sri Lanka</option>
+                    <option value="KN">St Kitts and Nevis</option>
+                    <option value="LC">St Lucia</option>
+                    <option value="SD">Sudan</option>
+                    <option value="SR">Suriname</option>
+                    <option value="SE">Sweden</option>
+                    <option value="CH">Switzerland</option>
+                    <option value="SY">Syria</option>
+                    <option value="TW">Taiwan - China</option>
+                    <option value="TZ">Tanzania</option>
+                    <option value="TH">Thailand</option>
+                    <option value="TT">Trinidad and Tobago</option>
+                    <option value="TN">Tunisia</option>
+                    <option value="TR">Turkey</option>
+                    <option value="TC">Turks Caicos</option>
+                    <option value="UG">Uganda</option>
+                    <option value="UA">Ukraine</option>
+                    <option value="AE">United Arab Emirates</option>
+                    <option value="GB" selected>United Kingdom</option>
+                    <option value="US">United States</option>
+                    <option value="UY">Uruguay</option>
+                    <option value="VA">Vatican City</option>
+                    <option value="VE">Venezuela</option>
+                    <option value="VN">Vietnam</option>
+                    <option value="ZM">Zambia</option>
+                    <option value="ZW">Zimbabwe</option>
+                </select>
+                <label for="add-country">Country</label>
+            </div>
+            <div class="form-floating mt-3" id="add-error"></div>
+    
+            
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-danger" data-bs-dismiss="modal" pa-marked="1">Cancel</button>
+            <button type="submit" id="add-submit" class="btn btn-success" pa-marked="1">Add staff member</button>
+            
+        </div></form>
+        </div>
+    </div>
+    </div>
+    </div>
+    
+        <!-- remove modal -->
+      <div class="modal fade" id="loginModal" tabindex="-1" aria-labelledby="loginModalLabel" data-bs-backdrop="static" aria-modal="true" role="dialog">
+        <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title" id="addModalLabel">Manager login</h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" pa-marked="1"></button>
+            </div>
+            <div class="modal-body">
+              <form id="login">
+                <div class="form-floating">
+                    <input type="email" class="form-control" name="email" id="login-email" placeholder="name@example.com" autocomplete="email" onkeyup="removeDanger(this)">
+                    <label for="login-email">Email address</label>
+                </div>
+                <div class="form-floating">
+                    <input type="password" class="form-control" name="password" id="login-password" placeholder="Password" onkeyup="removeDanger(this)" autocomplete="new-password">
+                    <label for="login-password">Password</label>
+                </div>
+              <div class="form-floating mt-3" id="login-error"></div>
+      
+              
+            </div>
+            <div class="modal-footer">
+              <div class="form-check form-switch" style="justify-content:left;margin-right:auto;float:left;">
+                  <input class="form-check-input" onclick="showPassword('#login-password')" type="checkbox" id="flexSwitchCheckDefault">
+                  <label class="form-check-label" for="flexSwitchCheckDefault">Show password</label>
+              </div>
+              <button type="button" class="btn btn-danger" data-bs-dismiss="modal" pa-marked="1">Cancel</button>
+              <button type="submit" id="login-submit" class="btn btn-success" pa-marked="1">Log in</button>
+              
+            </div></form>
+          </div>
+        </div>
+      </div>
+      </div>
 </body>
 </html>
