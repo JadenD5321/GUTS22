@@ -148,7 +148,7 @@ app.post("/api/login", (req, res) => {
                 } else {
                     con.end();
                     if(result.length == 1) {
-                        res.json({success:true, token:r[0].token});
+                        res.json({success:true, token:result[0].token});
                     } else {
                         res.json({success:false, reason: "Your email or password is incorrect."});
                     }
