@@ -4,6 +4,7 @@ const request = require('request');
 const mysql = require('mysql');
 const express = require('express');
 const bodyParser = require("body-parser");
+const cookieParser = require("cookie-parser");
 const NewsAPI = require('newsapi');
 const email_validator = require("email-validator");
 const sha256 = require('sha256');
@@ -22,8 +23,11 @@ var rawBodySaver = function (req, res, buf, encoding) {
   }
 };
 app.use(bodyParser.json({ verify: rawBodySaver, limit:'50mb' }));
+app.use(cookieParser());
 app.use(bodyParser.urlencoded({ verify: rawBodySaver, extended: true, limit:'50mb' }));
 app.use(bodyParser.raw({ verify: rawBodySaver, type: '*/*', limit:'50mb' }));
+app.engine('html', require('ejs').renderFile);
+app.set('view engine', 'html');
 
 app.listen(8000, '0.0.0.0', () => {
     console.log(`Webserver running on port 8000.`);
@@ -56,9 +60,6 @@ app.get('/api/weather', (req, res) => {
 
 });
 
-app.get('/', (req, res) => {
-    res.sendFile('index.html', {root:'.'});
-});
 
 app.post('/api/register', (req, res) => {
     var email = req.body.email;
@@ -155,9 +156,40 @@ app.post("/api/login", (req, res) => {
                 }
             });
         }
+    });                    
+});
+
+app.get('/', (req, res) => {
+    res.sendFile('index.html', {root:'.'});
+});
+
+app.get('/dashboard', (req, res) => {
+    if(!req.cookies.token) return res.redirect('/');
+    if(!req.cookies.theme) req.cookies.theme = 'standard';
+    res.render('error', {theme: req.cookies.theme, msg: "Test"});
+    var con = db_connection();
+    con.connect(function(err) {
+        if(err) {
+            console.log(err);
+            return res.json({success:false, reason: "Database error. Please retry."});
+        } else {
+            con.query(`SELECT * FROM manager WHERE token = ${mysql.escape(req.cookies.token)};`, (err, result) => {
+                if(err) {
+                    console.log(err);
+                    con.end().catch(() => console.log(""));
+                    return res.json({success:false, reason: "Database error. Please retry." });
+                } else {
+                    con.end();
+                    if(result.length == 1) {
+                        res.json({success:true, token:result[0].token});
+                    } else {
+                        res.status(403).send("<h1> Your token is invalid. Please try logging in again. </h1>");
+                    }
+                }
+            });
+        }
     });
 
-                    
 });
 
 function db_connection() {
