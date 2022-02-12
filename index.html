@@ -106,6 +106,64 @@
                     });
                 }
             });
+
+            document.getElementById('login').addEventListener('submit', e => {
+                e.preventDefault();
+                var arr = $('#login').serializeArray();
+                var data = {};
+                for(var x=0;x<arr.length;x++) {
+                    data[arr[x].name] = arr[x].value;
+                }
+                var required = ['email', 'password'];
+                var p = true;
+                for(x=0;x<required.length;x++) {
+                    if(!required[x] in data)  {
+                        document.getElementById('login-'+required[x]).classList.add('is-invalid');
+                        p = false;
+                    }
+                    
+                }
+                if(!p) {
+                    document.getElementById('login-error').innerHTML = `<div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    <strong>Please fill in all of the fields.</strong> 
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>`;
+                } else {
+                    // disable form
+                    required.forEach(e => document.getElementById('login-'+e).disabled = true);
+                    var submitbtn = document.getElementById('login-submit');
+                    submitbtn.disabled = true;
+                    submitbtn.classList.replace('btn-primary', 'btn-info');
+                    submitbtn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i>';
+                    
+                    //send request
+                    fetch('/api/login', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(data)
+                        }).then(response => response.json())
+                    .then(data => {
+                        if(data.success) {
+                            document.cookie = `token=${data.token}; expires=Thu, 18 Dec 2050 12:00:00 UTC`;
+                            window.location.href = '/dashboard';
+                        } else {
+                            if(data.field) document.getElementById('login-'+data.field).classList.add('is-invalid');
+                            required.forEach(e => document.getElementById('login-'+e).disabled = false);
+                            submitbtn.disabled = false;
+                            submitbtn.classList.replace('btn-info', 'btn-primary');
+                            submitbtn.innerHTML = 'Register';
+                            document.getElementById('login-error').innerHTML = `
+                            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                            <strong>${data.reason}</strong> 
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                            </div>
+                            `;
+                        }
+                    });
+                }
+            });
         };
         
         function showPassword(id) {
@@ -119,7 +177,7 @@
             }
         }
         function removeDanger(e) {
-            if(e.classList.has('is-invalid')) {
+            if(e.classList.contains('is-invalid')) {
                 e.classList.remove('is-invalid');
             }
         }
@@ -128,11 +186,11 @@
         #register-email {
             border-radius: 0;
         }
-        #register-forename {
+        #register-forename, #login-email {
             border-bottom-right-radius: 0;
             border-bottom-left-radius: 0;
         }
-        #register-password {
+        #register-password, #login-password {
             border-top-right-radius: 0;
             border-top-left-radius: 0;
         }
@@ -176,8 +234,10 @@
     <div class="container">
         <h1 class="mt-3">Welcome to the GUTS22 app.</h1>
         <p><a href="#" data-bs-toggle="modal" data-bs-target="#registerModal"><button class="btn btn-primary">Register</button></a></p>
-        <p>or <a href="#">log in</a>.</p>
+        <p>or <a href="#" data-bs-toggle="modal" data-bs-target="#loginModal">log in</a>.</p>
     </div>
+
+    <!-- register modal -->
     <div class="modal fade" id="registerModal" tabindex="-1" aria-labelledby="registerModalLabel" data-bs-backdrop="static" aria-modal="true" role="dialog">
         <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
           <div class="modal-content">
@@ -189,15 +249,15 @@
               <form id="register">
                 <div class="form-floating">
                     <input type="text" class="form-control" name="forename" id="register-forename" placeholder="Daniel" autocomplete="given-name" onkeyup="removeDanger(this)">
-                    <label for="login-email">Forename</label>
+                    <label for="register-forename">Forename</label>
                 </div>
                 <div class="form-floating">
                     <input type="email" class="form-control" name="email" id="register-email" placeholder="name@example.com" autocomplete="email" onkeyup="removeDanger(this)">
-                    <label for="login-email">Email address</label>
+                    <label for="register-email">Email address</label>
                 </div>
                 <div class="form-floating">
                     <input type="password" class="form-control" name="password" id="register-password" placeholder="Password" onkeyup="removeDanger(this)" autocomplete="new-password">
-                    <label for="login-password">Password</label>
+                    <label for="register-password">Password</label>
                 </div>
               <div class="form-floating mt-3" id="register-error"></div>
       
@@ -210,6 +270,42 @@
               </div>
               <button type="button" class="btn btn-danger" data-bs-dismiss="modal" pa-marked="1">Cancel</button>
               <button type="submit" id="register-submit" class="btn btn-success" pa-marked="1">Register</button>
+              
+            </div></form>
+          </div>
+        </div>
+      </div>
+      </div>
+
+      <!-- login modal -->
+      <div class="modal fade" id="loginModal" tabindex="-1" aria-labelledby="loginModalLabel" data-bs-backdrop="static" aria-modal="true" role="dialog">
+        <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title" id="exampleModalLabel">Manager login</h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" pa-marked="1"></button>
+            </div>
+            <div class="modal-body">
+              <form id="login">
+                <div class="form-floating">
+                    <input type="email" class="form-control" name="email" id="login-email" placeholder="name@example.com" autocomplete="email" onkeyup="removeDanger(this)">
+                    <label for="login-email">Email address</label>
+                </div>
+                <div class="form-floating">
+                    <input type="password" class="form-control" name="password" id="login-password" placeholder="Password" onkeyup="removeDanger(this)" autocomplete="new-password">
+                    <label for="login-password">Password</label>
+                </div>
+              <div class="form-floating mt-3" id="login-error"></div>
+      
+              
+            </div>
+            <div class="modal-footer">
+              <div class="form-check form-switch" style="justify-content:left;margin-right:auto;float:left;">
+                  <input class="form-check-input" onclick="showPassword('#login-password')" type="checkbox" id="flexSwitchCheckDefault">
+                  <label class="form-check-label" for="flexSwitchCheckDefault">Show password</label>
+              </div>
+              <button type="button" class="btn btn-danger" data-bs-dismiss="modal" pa-marked="1">Cancel</button>
+              <button type="submit" id="login-submit" class="btn btn-success" pa-marked="1">Log in</button>
               
             </div></form>
           </div>
