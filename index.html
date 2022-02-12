@@ -59,7 +59,7 @@
                 var required = ['forename', 'email', 'password'];
                 var p = true;
                 for(x=0;x<required.length;x++) {
-                    if(!required[x] in data)  {
+                    if(!data[required[x]])  {
                         document.getElementById('register-'+required[x]).classList.add('is-invalid');
                         p = false;
                     }
@@ -91,6 +91,7 @@
                             document.cookie = `token=${data.token}; expires=Thu, 18 Dec 2050 12:00:00 UTC`;
                             window.location.href = '/dashboard';
                         } else {
+                            var submitbtn = document.getElementById('add-submit');
                             if(data.field) document.getElementById('register-'+data.field).classList.add('is-invalid');
                             required.forEach(e => document.getElementById('register-'+e).disabled = false);
                             submitbtn.disabled = false;
@@ -117,7 +118,7 @@
                 var required = ['email', 'password'];
                 var p = true;
                 for(x=0;x<required.length;x++) {
-                    if(!required[x] in data)  {
+                    if(!data[required[x]])  {
                         document.getElementById('login-'+required[x]).classList.add('is-invalid');
                         p = false;
                     }
@@ -149,6 +150,7 @@
                             document.cookie = `token=${data.token}; expires=Thu, 18 Dec 2050 12:00:00 UTC`;
                             window.location.href = '/dashboard';
                         } else {
+                            var submitbtn = document.getElementById('add-submit');
                             if(data.field) document.getElementById('login-'+data.field).classList.add('is-invalid');
                             required.forEach(e => document.getElementById('login-'+e).disabled = false);
                             submitbtn.disabled = false;
