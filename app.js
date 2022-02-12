@@ -9,6 +9,7 @@ const email_validator = require("email-validator");
 const sha256 = require('sha256');
 const newsapi = new NewsAPI(process.env.NEWS);
 const weather = require('openweather-apis');
+const generator = require('generate-password');
 weather.setLang('en');
 weather.setAPPID(process.env.WEATHER);
 const querystring = require('querystring');
@@ -63,7 +64,7 @@ app.post('/api/register', (req, res) => {
     var password = req.body.password;
 
     if(!email || !forename || !password) return res.json({success:false, reason: "Missing data"});
-    if(!email_validator.validate(email)) return res.json({success:false, reason: "The email address provided is invalid."});
+    if(!email_validator.validate(email)) return res.json({success:false, reason: "The email address provided is invalid.", field:"email"});
 
     var con = db_connection();
     con.connect(function(err) {
@@ -81,20 +82,40 @@ app.post('/api/register', (req, res) => {
                         con.end();
                         return res.json({success:false, reason: "This email is already in use. Please retry with another one.", field: "email"});
                     } else {
-                        con.query(`INSERT INTO manager (email, forename, password) VALUES (${mysql.escape(email)}, ${mysql.escape(forename)}, ${mysql.escape(sha256(password))});`, (err, result) => {
-                            if(err) {
-                                console.log(err);
-                                con.end().catch(() => console.log(""));
-                                return res.json({success:false, reason: "Database error. Please retry."});
+                        var token = generator.generate({
+                            length: 50,
+                            numbers: true,
+                            lowercase:false
+                       });
+                       // unlikely to be in db but worth a check.
+                       con.query(`SELECT token FROM manager WHERE token = ${mysql.escape(token)}`, (err, result) => {
+                        if(err) {
+                            console.log(err);
+                            con.end().catch(() => console.log(""));
+                            return res.json({success:false, reason: "Database error. Please retry."});
+                        } else {
+                            if(result.length == 0) {
+                                con.query(`INSERT INTO manager (email, forename, password, token) VALUES (${mysql.escape(email)}, ${mysql.escape(forename)}, ${mysql.escape(sha256(password))}, ${mysql.escape(token)});`, (err, result) => {
+                                    if(err) {
+                                        console.log(err);
+                                        con.end().catch(() => console.log(""));
+                                        return res.json({success:false, reason: "Database error. Please retry."});
+                                    } else {
+                                        con.end();
+                                        if(result.affectedRows == 1) {
+                                            return res.json({success:true, token:token});
+                                        } else {
+                                            return res.json({success:false, reason:"An error has occurred. Please retry."});
+                                        }
+                                    }
+                                });
                             } else {
-                                con.end();
-                                if(result.affectedRows == 1) {
-                                    return res.json({success:true});
-                                } else {
-                                    return res.json({success:false, reason:"An error has occurred. Please retry."});
-                                }
+                                return res.json({success:false, reason:"Token already exists. Please retry. Contact support if this persists."});
                             }
-                        });
+                            
+                        }
+                       });
+                    
                     }   
                 }
             });
