@@ -22,8 +22,6 @@ app.use(bodyParser.json({ verify: rawBodySaver, limit:'50mb' }));
 app.use(bodyParser.urlencoded({ verify: rawBodySaver, extended: true, limit:'50mb' }));
 app.use(bodyParser.raw({ verify: rawBodySaver, type: '*/*', limit:'50mb' }));
 
-app.all('/', (req, res) => res.send('Hello world'));
-
 app.listen(8000, '0.0.0.0', () => {
     console.log(`Webserver running on port 8000.`);
 });
@@ -45,13 +43,15 @@ app.get('/weather', (req, res) => {
     weather.getAllWeather((err, data) => {
         if(err) {
             console.log(err);
-            res.status(500).json({success:false, reason: "Something went wrong"});
+            res.status(500).json({success:false, reason: `${err}`});
         } else {
             res.json({success:true, data:data});
         }
     });
 
+});
 
-
+app.get('/', (req, res) => {
+    res.sendFile('index.html', {root:'.'});
 });
 
