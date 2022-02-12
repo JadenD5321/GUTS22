@@ -281,10 +281,20 @@ app.get('/dashboard', (req, res) => {
                     con.end().catch(() => console.log(""));
                     return res.render('error.ejs', {theme: req.cookies.theme, msg: "Database error. Please try again later."});
                 } else {
-                    con.end();
+                    
                     if(result.length == 1) {
-                        res.render('dashboard.ejs', {theme: req.cookies.theme, userdata: result[0]});
+                        con.query(`SELECT * FROM staff WHERE manager = ${result[0].managerID};`, (err, result2) => {
+                            con.end();
+                            if(err) {
+                                console.log(err);
+                                return res.render('error.ejs', {theme: req.cookies.theme, msg: "Database error. Please try again later."});
+                            } else {
+                                res.render('dashboard.ejs', {theme: req.cookies.theme, userdata: result[0], staff:result2});
+                            }
+                        });
+                        
                     } else {
+                        con.end();
                         res.render('error.ejs', {theme: req.cookies.theme, msg: "Your token is invalid. Please try logging in again."});
                     }
                 }
