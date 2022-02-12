@@ -1,4 +1,6 @@
 # This is a version of the program that would be run locally on a user's computer.
+# (Completed by Arsenal6789#6449)
+
 from tkinter import *
 from urllib.request import urlopen
 from country_list import countries_for_language
