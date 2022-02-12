@@ -65,10 +65,40 @@ app.get('/api/weather', (req, res) => {
 
 });
 
+app.post('/api/remove-staff', (req, res) => {
+    var email = req.body.email;
+    var manager_token = req.cookies.token;
+
+    if(!manager_token) return res.json({success:false, reason:"Unauthorised. Try logging out and logging back in."});
+    if(!email) return res.json({success:false, reason: "Missing data"});
+
+    var con = db_connection();
+    con.connect(function(err) {
+        if(err) {
+            console.log(err);
+            return res.json({success:false, reason: "Database error. Please retry."});
+        } else {
+            con.query(`DELETE FROM staff WHERE email = ${mysql.escape(email)} AND manager = (SELECT managerID FROM manager WHERE token = ${mysql.escape(manager_token)});`, (err, result) => {
+                con.end();
+                if(err) {
+                    console.log(err);
+                    return res.json({success:false, reason:"Database error. Please retry."});
+                } else {
+                    if(result.affectedRows == 1) {
+                        res.json({success:true});
+                    } else {
+                        res.json({success:false, reason:"This action was unsuccessful. Please check that the staff member is added."});
+                    }
+                }
+            });
+        }
+    });
+});
+
 app.post('/api/add-staff', (req, res) => {
     var email = req.body.email;
     var name = req.body.name;
-    var city = req.body.name;
+    var city = req.body.city;
     var country = req.body.country;
     var manager_token = req.cookies.token;
 
