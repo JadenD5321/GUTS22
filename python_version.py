@@ -24,16 +24,10 @@ def weather(country, location):
         country = "uk"
     elif country=="usa" or country=="united states" or country == "united states of america":
         country = "united_states_of_america"
-
-
-
-
-
-def addcolleague(name, city):
-    pass
-
-    def search():
-    pass
+ //add colleague button
+add_colleague_button = Button(left_frame, text="Add", command=add_colleague_to_dict)
+add_colleague_button.grid(row=3, column=0, padx=5, pady=5, columnspan=2)
+       
 
 # ----Create an application Window
 application = Tk()
